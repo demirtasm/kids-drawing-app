@@ -61,6 +61,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         val touchX = event?.x
         val touchY = event?.y
+        
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> { //Called when the user touches the screen.
                 mDrawPath!!.color = color
@@ -69,6 +70,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
                 mDrawPath!!.moveTo(touchX!!, touchY!!)
 
             }
+
             MotionEvent.ACTION_MOVE->{ //Called when the user moves their finger on the screen
                 mDrawPath!!.lineTo(touchX!!, touchY!!)
             }
