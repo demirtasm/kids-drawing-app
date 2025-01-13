@@ -3,6 +3,7 @@ package com.example.kidsdrawingapp
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 
@@ -28,7 +29,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         mDrawPaint!!.strokeJoin = Paint.Join.ROUND
         mDrawPaint!!.strokeCap = Paint.Cap.ROUND //Rounded line ends
         mCanvasPaint = Paint(Paint.DITHER_FLAG)
-        mBrushSize = 20.toFloat() // Default brush size
+       // mBrushSize = 20.toFloat() // Default brush size
     }
 
     internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path() {
@@ -61,7 +62,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         val touchX = event?.x
         val touchY = event?.y
-        
+
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> { //Called when the user touches the screen.
                 mDrawPath!!.color = color
@@ -83,6 +84,11 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         invalidate()// Redraws the view.
 
         return true
+    }
+
+    fun setSizeForBrush(newSize:Float){
+        mBrushSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, newSize, resources.displayMetrics)
+        mDrawPaint!!.strokeWidth = mBrushSize
     }
 }
 
