@@ -10,12 +10,14 @@ import android.view.View
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var mDrawPath: CustomPath? = null //The path the user is currently drawing on.
     private var mCanvasBitmap: Bitmap? = null //The bitmap from which the drawings are made.
-    private var mDrawPaint: Paint? = null //Holds the brush properties (color, style, thickness) used for drawing.
+    private var mDrawPaint: Paint? =
+        null //Holds the brush properties (color, style, thickness) used for drawing.
     private var mCanvasPaint: Paint? = null //The paint used to draw the bitmap.
     private var mBrushSize: Float = 0.toFloat() //Defines the brush thickness.
     private var color = Color.BLACK
     private var canvas: Canvas? = null //The canvas on which the drawings will be made.
-    private val mPaths= ArrayList<CustomPath>() //A list that stores all paths (lines) drawn by the user
+    private val mPaths =
+        ArrayList<CustomPath>() //A list that stores all paths (lines) drawn by the user
 
     init {
         setUpDrawing()
@@ -29,7 +31,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         mDrawPaint!!.strokeJoin = Paint.Join.ROUND
         mDrawPaint!!.strokeCap = Paint.Cap.ROUND //Rounded line ends
         mCanvasPaint = Paint(Paint.DITHER_FLAG)
-       // mBrushSize = 20.toFloat() // Default brush size
+        // mBrushSize = 20.toFloat() // Default brush size
     }
 
     internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path() {
@@ -45,7 +47,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(mCanvasBitmap!!, 0f, 0f, mCanvasPaint)
-        for(path in mPaths){
+        for (path in mPaths) {
             mDrawPaint!!.strokeWidth = path.brushThickness
             mDrawPaint!!.color = path.color
             canvas.drawPath(path, mDrawPaint!!)
@@ -72,13 +74,15 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
 
             }
 
-            MotionEvent.ACTION_MOVE->{ //Called when the user moves their finger on the screen
+            MotionEvent.ACTION_MOVE -> { //Called when the user moves their finger on the screen
                 mDrawPath!!.lineTo(touchX!!, touchY!!)
             }
-            MotionEvent.ACTION_UP->{//Called when the user lifts their finger off the screen. The line is completed and added to the mPaths list.
+
+            MotionEvent.ACTION_UP -> {//Called when the user lifts their finger off the screen. The line is completed and added to the mPaths list.
                 mPaths.add(mDrawPath!!)
                 mDrawPath = CustomPath(color, mBrushSize)
             }
+
             else -> return false
         }
         invalidate()// Redraws the view.
@@ -86,9 +90,18 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         return true
     }
 
-    fun setSizeForBrush(newSize:Float){
-        mBrushSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, newSize, resources.displayMetrics)
+    fun setSizeForBrush(newSize: Float) {
+        mBrushSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            newSize,
+            resources.displayMetrics
+        )
         mDrawPaint!!.strokeWidth = mBrushSize
+    }
+
+    fun colorForBrush(newColor: String) {
+        color = Color.parseColor(newColor)
+        mDrawPaint!!.color = color
     }
 }
 
