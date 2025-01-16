@@ -18,11 +18,18 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     private var canvas: Canvas? = null //The canvas on which the drawings will be made.
     private val mPaths =
         ArrayList<CustomPath>() //A list that stores all paths (lines) drawn by the user
+    private val mUndoPath= ArrayList<CustomPath>()
 
     init {
         setUpDrawing()
     }
 
+    fun onClickUndo(){
+        if(mPaths.size>0){
+            mUndoPath.add(mPaths.removeAt(mPaths.size-1))
+            invalidate()
+        }
+    }
     private fun setUpDrawing() {
         mDrawPaint = Paint()
         mDrawPath = CustomPath(color, mBrushSize)
