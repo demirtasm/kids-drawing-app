@@ -13,9 +13,9 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.lifecycle.lifecycleScope
+import com.airbnb.lottie.LottieAnimationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,6 +38,15 @@ class MainActivity : AppCompatActivity() {
     private var drawingView: DrawingView? = null
     private var mImageButtonCurrentPaint: ImageButton? = null
     var customProgressDialog: Dialog? = null
+    var customBackgroundView: FrameLayout? = null
+    private var isSaveAction = false
+    var penWeight: View? = null
+    var colorSelectionPopupItems: View? = null
+    var icDrawEraser: ImageButton? = null
+    var icDrawColor: LottieAnimationView? = null
+    var icDrawPen: ImageButton? = null
+    var icDrawLineWeight: LottieAnimationView? = null
+    var paintSettingsLayout: View? = null
 
     val openGalleryLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -54,12 +64,17 @@ class MainActivity : AppCompatActivity() {
                 if (isGranted) {
                     Toast.makeText(
                         this,
-                        "Permission granted for location",
+                        "Permission granted",
                         Toast.LENGTH_LONG
                     ).show()
-                    val pickIntent =
-                        Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                    openGalleryLauncher.launch(pickIntent)
+                    if (isSaveAction) {
+                        saveDrawing()
+                    } else {
+                        val pickIntent =
+                            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                        openGalleryLauncher.launch(pickIntent)
+                    }
+
                 } else {
                     if (permissionName == Manifest.permission.READ_EXTERNAL_STORAGE) {
                         Toast.makeText(
@@ -78,10 +93,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         drawingView = findViewById(R.id.drawingView)
         drawingView?.setSizeForBrush(10.toFloat())
+        paintSettingsLayout = findViewById(R.id.paint_settings)
+        icDrawLineWeight = paintSettingsLayout?.findViewById(R.id.ic_draw_line_weight)
+        icDrawPen = paintSettingsLayout?.findViewById(R.id.ic_draw_pen)
+        icDrawColor = paintSettingsLayout?.findViewById(R.id.lottie_draw_color)
+        icDrawEraser = paintSettingsLayout?.findViewById(R.id.ic_draw_eraser)
+        colorSelectionPopupItems = findViewById(R.id.color_selection_popup_items)
+        penWeight = findViewById(R.id.brush_size)
 
-        val linearLayoutPaintColors = findViewById<LinearLayout>(R.id.ll_paint_colors)
+        val gridLayoutColors: GridLayout = findViewById(R.id.grid_color_palette)
+        customBackgroundView = findViewById(R.id.customBackgroundView)
 
-        mImageButtonCurrentPaint = linearLayoutPaintColors[1] as ImageButton
+        mImageButtonCurrentPaint = gridLayoutColors[1] as ImageButton
         mImageButtonCurrentPaint!!.setImageDrawable(
             ContextCompat.getDrawable(
                 this,
@@ -89,14 +112,16 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val ibBrush: ImageButton = findViewById(R.id.ib_brush)
-        ibBrush.setOnClickListener {
-            showBrushSizeChooserDialog()
-        }
-
-        val ibGallery: ImageButton = findViewById(R.id.ib_gallery)
+        val ibGallery: ImageButton = findViewById(R.id.ib_save)
         ibGallery.setOnClickListener {
-            requestStoragePermission()
+            isSaveAction = false
+            if (isReadStorageAllowed()) {
+                val pickIntent =
+                    Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                openGalleryLauncher.launch(pickIntent)
+            } else {
+                requestStoragePermission()
+            }
         }
 
         val ibUndo: ImageButton = findViewById(R.id.ib_undo)
@@ -106,13 +131,41 @@ class MainActivity : AppCompatActivity() {
 
         val ibSave: ImageButton = findViewById(R.id.ib_save)
         ibSave.setOnClickListener {
+            isSaveAction = true
             if (isReadStorageAllowed()) {
-                showProgressDialog()
-                lifecycleScope.launch {
-                    val flDrawingView: FrameLayout = findViewById(R.id.fl_drawing_view_container)
-                    saveBitmapFile(getBitmapFromView(flDrawingView))
-                }
+                saveDrawing()
+            } else {
+                requestStoragePermission()
             }
+        }
+
+
+        icDrawColor?.setAnimation(R.raw.lottie_select_color)
+        icDrawColor?.setOnClickListener {
+            icDrawColor?.playAnimation()
+            customBackgroundView?.visibility = View.VISIBLE
+            colorSelectionPopupItems?.visibility = View.VISIBLE
+            penWeight?.visibility = View.GONE
+        }
+        icDrawLineWeight?.post {
+            icDrawLineWeight?.setProgress(1.0f)
+        }
+        icDrawLineWeight?.setAnimation(R.raw.lottie_line)
+        icDrawLineWeight?.setOnClickListener {
+            icDrawLineWeight?.playAnimation()
+            showBrushSizeChooserDialog()
+            customBackgroundView?.visibility = View.VISIBLE
+            colorSelectionPopupItems?.visibility = View.GONE
+            penWeight?.visibility = View.VISIBLE
+        }
+
+    }
+
+    private fun saveDrawing() {
+        showProgressDialog()
+        lifecycleScope.launch {
+            val flDrawingView: FrameLayout = findViewById(R.id.fl_drawing_view_container)
+            saveBitmapFile(getBitmapFromView(flDrawingView))
         }
     }
 
@@ -151,28 +204,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showBrushSizeChooserDialog() {
-        val brushDialog = Dialog(this)
-        brushDialog.setContentView(R.layout.dialog_brush_size)
-        brushDialog.setTitle("Brush size:")
 
-        val smallBtn = brushDialog.findViewById<ImageView>(R.id.ib_small_brush)
-        val mediumBtn = brushDialog.findViewById<ImageView>(R.id.ib_medium_brush)
-        val largeBtn = brushDialog.findViewById<ImageView>(R.id.ib_large_brush)
+        val smallBtn = penWeight?.findViewById<ImageView>(R.id.ib_small_brush)
+        val mediumBtn = penWeight?.findViewById<ImageView>(R.id.ib_medium_brush)
+        val largeBtn = penWeight?.findViewById<ImageView>(R.id.ib_large_brush)
 
 
-        smallBtn.setOnClickListener {
+        smallBtn?.setOnClickListener {
             drawingView?.setSizeForBrush(10.toFloat())
-            brushDialog.dismiss()
+            customBackgroundView?.visibility = View.INVISIBLE
+
         }
-        mediumBtn.setOnClickListener {
+        mediumBtn?.setOnClickListener {
             drawingView?.setSizeForBrush(20.toFloat())
-            brushDialog.dismiss()
+            customBackgroundView?.visibility = View.INVISIBLE
         }
-        largeBtn.setOnClickListener {
+        largeBtn?.setOnClickListener {
             drawingView?.setSizeForBrush(30.toFloat())
-            brushDialog.dismiss()
+            customBackgroundView?.visibility = View.INVISIBLE
         }
-        brushDialog.show()
     }
 
     fun paintClicked(view: View) {
@@ -194,6 +244,7 @@ class MainActivity : AppCompatActivity() {
 
             mImageButtonCurrentPaint = view
         }
+        customBackgroundView?.visibility = View.INVISIBLE
     }
 
     private fun showRationalDialog(title: String, message: String) {

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <ImageButton
+        android:id="@+id/ib_large_brush"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="2dp"
+        android:background="@color/skin"
+        android:src="@drawable/line_one"
+        android:scaleType="centerInside"
+        android:onClick="paintClicked"
+        android:tag="@color/skin"/>
+    <ImageButton
+        android:id="@+id/ib_medium_brush"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="2dp"
+        android:background="@color/skin"
+        android:scaleType="centerInside"
+        android:src="@drawable/line_two"
+        android:onClick="paintClicked"
+        android:tag="@color/skin"/>
+    <ImageButton
+        android:id="@+id/ib_small_brush"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="2dp"
+        android:background="@color/skin"
+        android:scaleType="centerInside"
+        android:src="@drawable/line_three"
+        android:onClick="paintClicked"
+        android:tag="@color/skin"/>
+</LinearLayout>
