@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.Image
 import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Bundle
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private var isSaveAction = false
     var penWeight: View? = null
     var colorSelectionPopupItems: View? = null
+    var brushItemsMenu: View? = null
     var icDrawEraser: ImageButton? = null
     var icDrawColor: LottieAnimationView? = null
     var icDrawPen: ImageButton? = null
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         drawingView = findViewById(R.id.drawingView)
-        drawingView?.setSizeForBrush(10.toFloat())
+        drawingView?.setBrushSize(10.toFloat())
         paintSettingsLayout = findViewById(R.id.paint_settings)
         icDrawLineWeight = paintSettingsLayout?.findViewById(R.id.ic_draw_line_weight)
         icDrawPen = paintSettingsLayout?.findViewById(R.id.ic_draw_pen)
@@ -100,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         icDrawEraser = paintSettingsLayout?.findViewById(R.id.ic_draw_eraser)
         colorSelectionPopupItems = findViewById(R.id.color_selection_popup_items)
         penWeight = findViewById(R.id.brush_size)
+        brushItemsMenu = findViewById(R.id.brush_type)
 
         val gridLayoutColors: GridLayout = findViewById(R.id.grid_color_palette)
         customBackgroundView = findViewById(R.id.customBackgroundView)
@@ -111,7 +114,6 @@ class MainActivity : AppCompatActivity() {
                 R.drawable.pallet_pressed
             )
         )
-
         val ibGallery: ImageButton = findViewById(R.id.ib_save)
         ibGallery.setOnClickListener {
             isSaveAction = false
@@ -124,9 +126,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
+
         val ibUndo: ImageButton = findViewById(R.id.ib_undo)
         ibUndo.setOnClickListener {
-            drawingView?.onClickUndo()
+           // drawingView?.onClickUndo()
         }
 
         val ibSave: ImageButton = findViewById(R.id.ib_save)
@@ -146,6 +150,8 @@ class MainActivity : AppCompatActivity() {
             customBackgroundView?.visibility = View.VISIBLE
             colorSelectionPopupItems?.visibility = View.VISIBLE
             penWeight?.visibility = View.GONE
+            brushItemsMenu?.visibility = View.GONE
+
         }
         icDrawLineWeight?.post {
             icDrawLineWeight?.setProgress(1.0f)
@@ -157,6 +163,17 @@ class MainActivity : AppCompatActivity() {
             customBackgroundView?.visibility = View.VISIBLE
             colorSelectionPopupItems?.visibility = View.GONE
             penWeight?.visibility = View.VISIBLE
+            brushItemsMenu?.visibility = View.GONE
+        }
+
+        icDrawPen?.setOnClickListener {
+            brushItemsMenu?.visibility = View.VISIBLE
+            customBackgroundView?.visibility = View.VISIBLE
+            colorSelectionPopupItems?.visibility = View.GONE
+            penWeight?.visibility = View.GONE
+            selectedBrushTyped()
+
+
         }
 
     }
@@ -203,6 +220,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun selectedBrushTyped(){
+        val pencil = brushItemsMenu?.findViewById<ImageView>(R.id.pencil)
+        val brush = brushItemsMenu?.findViewById<ImageView>(R.id.brush)
+        val marker = brushItemsMenu?.findViewById<ImageView>(R.id.marker)
+        pencil?.setOnClickListener {
+            customBackgroundView?.visibility = View.INVISIBLE
+            drawingView?.setBrushType(BrushType.PENCIL)
+        }
+        brush?.setOnClickListener {
+            customBackgroundView?.visibility = View.INVISIBLE
+            drawingView?.setBrushType(BrushType.WATER_COLOUR)
+        }
+        marker?.setOnClickListener {
+            customBackgroundView?.visibility = View.INVISIBLE
+            drawingView?.setBrushType(BrushType.MARKER)
+
+        }
+    }
+
     private fun showBrushSizeChooserDialog() {
 
         val smallBtn = penWeight?.findViewById<ImageView>(R.id.ib_small_brush)
@@ -211,16 +247,16 @@ class MainActivity : AppCompatActivity() {
 
 
         smallBtn?.setOnClickListener {
-            drawingView?.setSizeForBrush(10.toFloat())
+            drawingView?.setBrushSize(10.toFloat())
             customBackgroundView?.visibility = View.INVISIBLE
 
         }
         mediumBtn?.setOnClickListener {
-            drawingView?.setSizeForBrush(20.toFloat())
+            drawingView?.setBrushSize(20.toFloat())
             customBackgroundView?.visibility = View.INVISIBLE
         }
         largeBtn?.setOnClickListener {
-            drawingView?.setSizeForBrush(30.toFloat())
+            drawingView?.setBrushSize(30.toFloat())
             customBackgroundView?.visibility = View.INVISIBLE
         }
     }
@@ -229,7 +265,7 @@ class MainActivity : AppCompatActivity() {
         if (view != mImageButtonCurrentPaint) {
             val imageButton = view as ImageButton
             val colorTag = imageButton.tag.toString()
-            drawingView?.colorForBrush(colorTag)
+            drawingView?.setBrushColor(colorTag)
 
             //selected
             imageButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.pallet_pressed))
